@@ -1,0 +1,7 @@
+{
+    "programmer": "AVR ISP",
+    "board": "adafruit:samd:adafruit_metro_m0",
+    "port": "/dev/tty.usbmodem145224441",
+    "sketch": "triggerbox.ino",
+    "configuration": "opt=small,usbstack=arduino,debug=off"
+}
