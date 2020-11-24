@@ -8,7 +8,7 @@ Each relay can be tuned to start and stop being closed, starting when a button i
 As in my hardware setup, each relay can hold up to 30V @ 5amps and is able to trigger any external DC powered motor, electro magnet, or the like.
 The accuracy of the timing has to be determined. Theoretically you can set on / off timestamps in a microsecond fashion (0.000001s), but this is heavily influenced by the program efficiency, the relay reaction time and the microcontrollers speed. More important than the accuracy to your entered timestamps though is the repeatability. If you do not change the hardware, the system should always trigger the relays with the same lag.
 
-This system can be triggered with a regular harwired push button, or be connected to a camera flash system or wired to two metal connectors.
+This system can be triggered with a regular hardwired push button, or be connected to a camera flash system or wired to two metal connectors.
 
 
 ## Hardware
