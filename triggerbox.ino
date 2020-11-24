@@ -5,6 +5,7 @@
 
 // PIN DECLARATION ----------------------------------------------------------------------------
 const int triggerPin = 2;
+const int triggerLedPin = 13;
 MD_REncoder rotaryEncoder = MD_REncoder(0, 1);
 const int rotaryHomePin = 3;
 
@@ -529,6 +530,8 @@ void triggerAction() {
     Serial.println("Actions triggered");
   #endif
 
+  digitalWrite(triggerLedPin, HIGH);
+
   // Wait at beginning
   if(initDelay > 0) delaySometime(initDelay);
 
@@ -589,6 +592,7 @@ void reset() {
   for(int i = 0; i < numOfTriggers; i++) {
     digitalWrite(triggers[i].pin, LOW);
   }
+    digitalWrite(triggerLedPin, LOW);
 };
 
 void saveDataToEeprom() {
