@@ -1,7 +1,6 @@
 // LIBRARIES ----------------------------------------------------------------------------------
 #include <MD_REncoder.h>
 #include <ArduinoSort.h>
-#include <EEPROMex.h>
 
 // PIN DECLARATION ----------------------------------------------------------------------------
 const int triggerPin = 2;
@@ -18,9 +17,6 @@ long rotaryCurrentDirection = 0;
 int rotaryDirection = 0;
 boolean editSettings = false;
 int menuSelector = 0;
-int EEPROMaddressLong;
-int EEPROMaddressInt;
-int EEPROMaddressCharArray;
 
 // DEFINE -------------------------------------------------------------------------------------
 #define development  // Serial.print infos when triggering
@@ -94,8 +90,6 @@ void setup() {
   // Setup rotary encoder
   rotaryEncoder.begin();
 
-  // TODO Read "triggers" from EEPROM
-
   // Set pinMode for relays
   for(int i = 0; i < numOfTriggers; i++) {
     /* Serial.print("triggers[i].pin: ");
@@ -103,20 +97,9 @@ void setup() {
     pinMode(triggers[i].pin, OUTPUT);
   }
 
-  // EEPROM
-  EEPROM.setMemPool(350, EEPROMSizeUno);
-  EEPROM.setMaxAllowedWrites(80);
-  delay(100);
-  EEPROMaddressInt  = EEPROM.getAddress(sizeof(int));
-  EEPROMaddressLong = EEPROM.getAddress(sizeof(long));
-  EEPROMaddressCharArray = EEPROM.getAddress(sizeof(triggerSetup)*7); 
-
-  // TODO: When enough memory, load "triggers" to Eeprom
-  // https://github.com/thijse/Arduino-EEPROMEx
-  //EEPROM.readBlock<triggerSetup>(0, triggers, 7);
-
-  // Get data from eeprom
-  getDataFromEeprom();
+  // TODO: Load "triggers" and settings (initDelay) from internal SPI Flash memory
+  // https://learn.adafruit.com/adafruit-metro-m0-express-designed-for-circuitpython/using-spi-flash
+  getDataFromMemory();
 
   // Initial save of settings
   calculateActions();
@@ -146,7 +129,7 @@ void loop() {
       printSettings();
       printActions();
       printTriggers();
-      saveDataToEeprom();
+      saveDataToMemory();
       Serial.println("Triggers and settings saved.");
     }
   }
@@ -595,17 +578,14 @@ void reset() {
     digitalWrite(triggerLedPin, LOW);
 };
 
-void saveDataToEeprom() {
-  // https://github.com/thijse/Arduino-EEPROMEx
-  // Save "initDelay" to Eeprom
-  EEPROM.writeLong(EEPROMaddressLong,initDelay);
+// Save triggers and settings (initDelay) to spi-flash
+void saveDataToMemory() {
+  // https://learn.adafruit.com/adafruit-metro-m0-express-designed-for-circuitpython/using-spi-flash
 
-  // TODO: When enough memory
-  // save "triggers" to Eeprom
-  // this..
-  // EEPROM.writeBlock<triggerSetup>(0, triggers, numOfTriggers);
+  // Save "initDelay" to memory
+  // EEPROM.writeLong(EEPROMaddressLong,initDelay);
 
-  // or like this..
+  // Save "triggers" to memory
   /* for(int i = 0; i < numOfTriggers; i++) {
     EEPROM.writeInt(EEPROMaddressInt, triggers[i].pin);
     EEPROM.writeLong(EEPROMaddressLong, triggers[i].startPoint);
@@ -614,10 +594,14 @@ void saveDataToEeprom() {
   } */
 }
 
-void getDataFromEeprom() {
-  initDelay = EEPROM.readLong(EEPROMaddressLong);
-  //EEPROM.readBlock<triggerSetup>(EEPROMaddressCharArray, triggers, numOfTriggers);
+// Get triggers and settings (initDelay) from spi-flash
+void getDataFromMemory() {
+  // https://learn.adafruit.com/adafruit-metro-m0-express-designed-for-circuitpython/using-spi-flash
 
+  // Get "initDelay" from memory
+  // initDelay = EEPROM.readLong(EEPROMaddressLong);
+
+  // Get "triggers" from memory
   /* for(int i = 0; i < numOfTriggers; i++) {
     triggers[i].pin = EEPROM.readInt(EEPROMaddressInt);
     triggers[i].startPoint = EEPROM.readLong(EEPROMaddressLong);
