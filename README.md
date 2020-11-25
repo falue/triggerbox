@@ -12,10 +12,17 @@ The accuracy of the timing has to be determined. Theoretically you can set on / 
 
 This system can be triggered with a regular hardwired push button, or be connected to a camera flash system or wired to two metal connectors.
 
+Maximum delay of any trigger is 35.79mins.
+
 
 ## Hardware
 
 This project needs eg. an Adafruit Metro M0 Express to wrok properly. Its program size and the demands for speed exceeds the capabilities of an arduino leonardo or UNO.
+
+
+## Schematics
+
+![Schematics](./schematics/triggerbox.png)
 
 
 ### Hardware list
