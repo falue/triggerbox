@@ -388,7 +388,7 @@ long readRotaryEncoder(boolean inertia) {
   if (reading) {
     int speed = rotaryEncoder.speed();
     int direction = reading == DIR_CW ? 1 : -1;
-    long step = inertia ? (pow(10, int(speed/5))+.99) * direction : direction;  // speedramps! +.99 to round up int
+    long step = inertia ? (pow(10, int(speed/4))+.99) * direction : direction;  // speedramps! +.99 to round up int
     return step;
   } else {
     return 0;
