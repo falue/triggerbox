@@ -19,7 +19,7 @@ MD_REncoder rotaryEncoder = MD_REncoder(0, 1);
 volatile boolean triggerIsActive = false;
 boolean hasShownTriggeronTft = false;
 volatile boolean safetyIsOn = false;
-long initDelay = 0;  // MICROSECONDS eg. 1000000 (= 1s)
+long initDelay = 2147483647;  // MICROSECONDS eg. 1000000 (= 1s)
 volatile long lastTimeTriggered = 0;
 long rotaryOldPosition = 0;
 long rotaryCurrentDirection = 0;
@@ -76,7 +76,7 @@ triggerSetup triggers[numOfTriggers] = {
 typedef struct action {
   long timestamp;
   int triggerAction;  // number of triggerSetup pins...
-  triggerSetup pins[numOfTriggers];  // "pins[numOfTriggers]" USES 34% MEMORY // DO NOT USE POINTER "*"
+  triggerSetup pins[numOfTriggers];  // "pins[numOfTriggers]" USES LOTS OF MEMORY
 };
 
 // max possibilities of actions - each trigger an unique start/end timestamp
@@ -275,7 +275,7 @@ void menu() {
   // Edit initDelay
   if(digitalRead(rotaryHomePin) && selectedMenu == "initDelay") {
     drawPopUp("Set initial delay");
-    drawPopUpContent(floatMicrosToString(initDelay, "s"));
+    drawPopUpContent(timestampToFloatString(initDelay, "s"));
     delay(250);  // wait for button to be depressed
     Serial.print("Edit initDelay:\t");
     Serial.println(initDelay);
@@ -291,7 +291,7 @@ void menu() {
       }
       // to preserve inertia of rotary encoder, only safe this once in a while
       if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
-        drawPopUpContent(floatMicrosToString(initDelay, "s"));
+        drawPopUpContent(timestampToFloatString(initDelay, "s"));
         lastTimeMoved = 0;
       }
     }
@@ -312,7 +312,7 @@ void menu() {
 
     if(relayTimepointToEdit == "startPoint") {
       drawPopUp("Set startpoint #" + String(relayIndex+1));
-      drawPopUpContent(floatMicrosToString(triggers[relayIndex].startPoint, "s"));
+      drawPopUpContent(timestampToFloatString(triggers[relayIndex].startPoint, "s"));
       Serial.println("Edit start point:");
       long initialGap = triggers[relayIndex].endPoint - triggers[relayIndex].startPoint;
       while(!digitalRead(rotaryHomePin)) {
@@ -328,7 +328,7 @@ void menu() {
         }
         // to preserve inertia of rotary encoder, only safe this once in a while
         if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
-          drawPopUpContent(floatMicrosToString(triggers[relayIndex].startPoint, "s"));
+          drawPopUpContent(timestampToFloatString(triggers[relayIndex].startPoint, "s"));
           lastTimeMoved = 0;
         }
       }
@@ -344,7 +344,7 @@ void menu() {
 
     } else {
       drawPopUp("Set duration #" + String(relayIndex+1));
-      drawPopUpContent(floatMicrosToString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
+      drawPopUpContent(timestampToFloatString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
       Serial.println("Edit end point:");
       while(!digitalRead(rotaryHomePin)) {
         long reading = readRotaryEncoder(true);
@@ -359,7 +359,7 @@ void menu() {
         }
         // to preserve inertia of rotary encoder, only safe this once in a while
         if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
-          drawPopUpContent(floatMicrosToString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
+          drawPopUpContent(timestampToFloatString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
           lastTimeMoved = 0;
         }
       }
@@ -764,15 +764,22 @@ void delaySometime(long delayTime) {
   }
 };
 
-String floatToString(float number, String append) {
-  int seconds = int(number);
-  long fractals = (number - seconds) * 1000000000;
-  return String(seconds) + "." + String(fractals) + append;
+String timestampToFloatString(long timestamp, String append) {
+  // max lenght of long timestamp: 2147483647 / 10 digits
+  int padding = timestamp > 99999999 ? 10 : 9;
+  char result[padding];  // 123.1234567
+  dtostrf(timestamp/1000000.0, padding, 6, result); 
+  return timestamp > 99999999
+    ? result
+    : result + append;
 }
 
-String floatMicrosToString(int timestamp, String append) {
-  return String(timestamp) + "us";
-  //return floatToString(timestamp/1000000.0, append);
+char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
+  asm(".global _printf_float");
+  char fmt[20];
+  sprintf(fmt, "%%%d.%df", width, prec);
+  sprintf(sout, fmt, val);
+  return sout;
 }
 
 /* String rightPad(String text, int length, String padd) {
@@ -814,7 +821,7 @@ void drawButton(String text, int x, int y, int w, int h, boolean selected, uint1
 void splashScreen() {
   tft.fillScreen(HX8357_WHITE);
   tft.setCursor(100, 1250);
-  tft.setTextColor(HX8357_BLUE);
+  tft.setTextColor(0x4A69);  // dark grey
   tft.setTextSize(4);
   centerText("TRIGGERBOX", screenWidth/2, screenHeight/2-25);
   tft.setCursor(200, screenHeight/2+25);
@@ -850,9 +857,11 @@ void drawNavbar() {
   tft.fillRect(0, 0, screenWidth, 50, 0x4A69);  // dark grey
 
   tft.setCursor(10, 7);
-  tft.setTextColor(HX8357_WHITE);
   tft.setTextSize(5);
-  tft.println("TRIGGERBOX");
+  tft.setTextColor(HX8357_WHITE);
+  tft.print("TRIGGER");
+  tft.setTextColor(HX8357_BLUE);
+  tft.println("BOX");
 
   if(editSettings) drawLock();
 }
@@ -888,17 +897,18 @@ void drawSettings() {
   tft.setTextSize(2);
   tft.print("Initial delay: ");
   drawInitDelayButton();
+  tft.drawLine(0, 81, screenWidth, 81, 0x4A69);
 }
 
 void drawInitDelayButton() {
-  drawButton(floatMicrosToString(initDelay, "s"), 180, 55, 200, 23, menuIds[menuSelector] == "initDelay");
+  drawButton(timestampToFloatString(initDelay, "s"), 180, 55, 150, 23, menuIds[menuSelector] == "initDelay");
 }
 
 void drawTriggerHeader() {
   tft.setCursor(0, marginTopTriggerlist);
   tft.setTextSize(2);
   tft.setTextColor(0x94B2);  // grey
-  tft.println("#  start           duration     active");
+  tft.println("#   Start T+..       Duration     Active");
 }
 
 void drawAllTriggers() {
@@ -935,12 +945,12 @@ void drawTrigger(int i) {
 
   // STARTPOINT
   highlightTextIfSelected(menuSelector == 1+i*3, relayIsActive);  // +1 because relay edit starts at index 1 of menuIds
-  tft.print(floatMicrosToString(triggers[i].startPoint, "s"));
+  tft.print(timestampToFloatString(triggers[i].startPoint, "s"));
   tft.setTextColor(HX8357_WHITE, HX8357_BLACK); tft.print(" ");
 
   // DURATION
   highlightTextIfSelected(menuSelector == 2+i*3, relayIsActive);  // +1 because relay edit starts at index 1 of menuIds
-  tft.print(floatMicrosToString(triggers[i].endPoint - triggers[i].startPoint, "s"));
+  tft.print(timestampToFloatString(triggers[i].endPoint - triggers[i].startPoint, "s"));
   //tft.print("μs");
   tft.setTextColor(HX8357_WHITE, HX8357_BLACK); tft.print(" ");
   
@@ -980,12 +990,13 @@ void drawFooter() {
   // make footer with btns etc.
   tft.setCursor(10, screenHeight-20);
   tft.setTextSize(2);
-  tft.setTextColor(0x94B2);  // grey
+  tft.setTextColor(HX8357_BLUE);
   tft.println("by FL");
   drawFooterButtons();
 }
 
 void drawFooterButtons() {
+  tft.setTextColor(0x94B2);  // grey
   if(!editSettings) {
     tft.setCursor(170, screenHeight-20);
     tft.println("Press knob for adjustment");

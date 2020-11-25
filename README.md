@@ -1,6 +1,6 @@
 # triggerbox
 
-## About
+## Introduction
 
 This system allows for triggering up to six relays in a specific, as precice-as-possible rhythm.
 It is designed for **high speed photography** or **high speed cinema shootings**,
