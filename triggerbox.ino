@@ -62,7 +62,7 @@ triggerSetup triggers[numOfTriggers] = {
 	{6, 1600000, 2600000, true},
 	{7, 2000000, 2200000, true},
 	{8, 1000000, 2000000, true},
-	{9, 2147483640, 2147483642, true},
+	{9, 7000000, 8000000, true},
 
   // test with every second HIGH 0.1 LOW
   /* {4, 0, 100000, false},
@@ -311,7 +311,7 @@ void menu() {
     long lastTimeMoved = millis();
 
     if(relayTimepointToEdit == "startPoint") {
-      drawPopUp("Set startpoint #" + relayIndex+1);
+      drawPopUp("Set startpoint relay #" + String(relayIndex+1));
       drawPopUpContent(floatMicrosToString(triggers[relayIndex].startPoint, "s"));
       Serial.println("Edit start point:");
       long initialGap = triggers[relayIndex].endPoint - triggers[relayIndex].startPoint;
@@ -343,7 +343,7 @@ void menu() {
       Serial.println("μs ("+String(triggers[relayIndex].startPoint / 1000000.0)+"..s)");
 
     } else {
-      drawPopUp("Set duration #" + relayIndex+1);
+      drawPopUp("Set duration relay #" + String(relayIndex+1));
       drawPopUpContent(floatMicrosToString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
       Serial.println("Edit end point:");
       while(!digitalRead(rotaryHomePin)) {
