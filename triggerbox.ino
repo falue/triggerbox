@@ -87,7 +87,8 @@ int numOfActions = 0;
 // TFT
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
 Adafruit_HX8357 tft = Adafruit_HX8357(TFT_CS, TFT_DC, TFT_RST);
-
+int screenWidth = 0;
+int screenHeight = 0;
 
 // ACTIONS FOR INTERRUPTS --------------------------------------------------------------------------
 // Push btn: Trigger
@@ -125,6 +126,10 @@ void setup() {
   // Setup TFT
   tft.begin();
   tft.setRotation(1);
+  screenWidth = tft.width();
+  screenHeight = tft.height();
+
+  // Draw Welcome screen
   splashScreen();
 
   delay(1500); // wait for serial monitor to catch up...
@@ -800,11 +805,11 @@ void splashScreen() {
   tft.setCursor(100, 1250);
   tft.setTextColor(HX8357_BLUE);
   tft.setTextSize(4);
-  centerText("TRIGGERBOX", tft.width()/2, tft.height()/2-25);
-  tft.setCursor(200, tft.height()/2+25);
+  centerText("TRIGGERBOX", screenWidth/2, screenHeight/2-25);
+  tft.setCursor(200, screenHeight/2+25);
   tft.setTextSize(2);
   tft.setTextColor(0xC638);  // light grey
-  centerText("by FL", tft.width()/2, tft.height()/2+25);
+  centerText("by FL", screenWidth/2, screenHeight/2+25);
 }
 
 // Draw complete screen
@@ -821,17 +826,17 @@ void drawLayout() {
 
   if(safetyIsOn) {
     drawPopUp("Safety switch is on");
-    tft.fillCircle(tft.width()/2, tft.height()/2+15, 36, HX8357_RED);
-    tft.fillCircle(tft.width()/2, tft.height()/2+15, 30, HX8357_WHITE);
-    tft.fillTriangle( tft.width()/2-27, tft.height()/2+38, tft.width()/2+23, tft.height()/2-12, tft.width()/2+25, tft.height()/2-9, HX8357_RED);
-    tft.fillTriangle( tft.width()/2-27, tft.height()/2+38, tft.width()/2-25, tft.height()/2+41, tft.width()/2+25, tft.height()/2-9, HX8357_RED);
+    tft.fillCircle(screenWidth/2, screenHeight/2+15, 36, HX8357_RED);
+    tft.fillCircle(screenWidth/2, screenHeight/2+15, 30, HX8357_WHITE);
+    tft.fillTriangle( screenWidth/2-27, screenHeight/2+38, screenWidth/2+23, screenHeight/2-12, screenWidth/2+25, screenHeight/2-9, HX8357_RED);
+    tft.fillTriangle( screenWidth/2-27, screenHeight/2+38, screenWidth/2-25, screenHeight/2+41, screenWidth/2+25, screenHeight/2-9, HX8357_RED);
     drawLock();
   }
 }
 
 void drawNavbar() {
   // OVERWRITE EXISTING
-  tft.fillRect(0, 0, tft.width(), 50, 0x4A69);  // dark grey
+  tft.fillRect(0, 0, screenWidth, 50, 0x4A69);  // dark grey
 
   tft.setCursor(10, 7);
   tft.setTextColor(HX8357_WHITE);
@@ -843,22 +848,22 @@ void drawNavbar() {
 
 void drawLock() {
   // the thing on top
-  tft.fillCircle(tft.width()-25, 20, 6, HX8357_YELLOW);
-  tft.fillCircle(tft.width()-25, 20, 4, 0x4A69);
+  tft.fillCircle(screenWidth-25, 20, 6, HX8357_YELLOW);
+  tft.fillCircle(screenWidth-25, 20, 4, 0x4A69);
   // lock body
-  tft.fillRoundRect(tft.width()-34, 23, 18, 14, 1, HX8357_YELLOW);
+  tft.fillRoundRect(screenWidth-34, 23, 18, 14, 1, HX8357_YELLOW);
   // lock hole
-  tft.fillCircle(tft.width()-25, 27, 3, 0x4A69);
-  tft.fillRect(tft.width()-26, 30, 3, 3, 0x4A69);
+  tft.fillCircle(screenWidth-25, 27, 3, 0x4A69);
+  tft.fillRect(screenWidth-26, 30, 3, 3, 0x4A69);
 }
 
 int drawTriggerAction(boolean show) {
   long startTrigger = micros();
   if(show) {
-    tft.fillCircle(tft.width()-25, 25, 8, HX8357_RED);
-    tft.drawCircle(tft.width()-25, 25, 9, HX8357_WHITE);
+    tft.fillCircle(screenWidth-25, 25, 8, HX8357_RED);
+    tft.drawCircle(screenWidth-25, 25, 9, HX8357_WHITE);
   } else {
-    tft.fillRect(tft.width()-34, 14, 22, 22, 0x4A69);  // dark grey
+    tft.fillRect(screenWidth-34, 14, 22, 22, 0x4A69);  // dark grey
   }
   hasShownTriggeronTft = show;
   return(micros() - startTrigger);
@@ -866,7 +871,7 @@ int drawTriggerAction(boolean show) {
 
 void drawSettings() {
   // OVERWRITE EXISTING
-  tft.fillRect(0, 55, tft.width(), 25, HX8357_BLACK);
+  tft.fillRect(0, 55, screenWidth, 25, HX8357_BLACK);
   tft.setCursor(0, 60);
   tft.setTextColor(0x94B2);  // grey
   tft.setTextSize(2);
@@ -887,7 +892,7 @@ void drawTriggerHeader() {
 
 void drawAllTriggers() {
   // OVERWRITE EXISTING
-  tft.fillRect(0, marginTopTriggerlist+22, tft.width(), 143, HX8357_BLACK);
+  tft.fillRect(0, marginTopTriggerlist+22, screenWidth, 143, HX8357_BLACK);
   tft.setCursor(0, marginTopTriggerlist+22);
   tft.setTextSize(3);
   tft.setTextColor(HX8357_WHITE);
@@ -898,7 +903,7 @@ void drawAllTriggers() {
 
 void drawTrigger(int i) {
   // fill row
-  tft.fillRect(0, marginTopTriggerlist+22+i*30, tft.width(), 24, HX8357_BLACK);
+  tft.fillRect(0, marginTopTriggerlist+22+i*30, screenWidth, 24, HX8357_BLACK);
   tft.setCursor(0, marginTopTriggerlist+22+i*30);
   tft.setTextSize(3);
   boolean relayIsActive = triggers[i].active;
@@ -944,25 +949,25 @@ void highlightTextIfSelected(boolean selected, boolean relayIsActive) {
 }
 
 void drawPopUp(String title) {
-  tft.fillRoundRect(25, 75, tft.width()-50, tft.height()-150, 5, HX8357_WHITE);
-  tft.drawRoundRect(24, 73, tft.width()-48, tft.height()-147, 5, HX8357_BLACK);
+  tft.fillRoundRect(25, 75, screenWidth-50, screenHeight-150, 5, HX8357_WHITE);
+  tft.drawRoundRect(24, 73, screenWidth-48, screenHeight-147, 5, HX8357_BLACK);
   tft.setTextColor(0x94B2);  // grey
   tft.setTextSize(2);
-  centerText(title, tft.width()/2, tft.height()/2-50);
+  centerText(title, screenWidth/2, screenHeight/2-50);
 }
 
 void drawPopUpContent(String content) {
-    tft.fillRect(30, tft.height()/2-5, tft.width()-60, 30, HX8357_WHITE);
+    tft.fillRect(30, screenHeight/2-5, screenWidth-60, 30, HX8357_WHITE);
     tft.setTextColor(HX8357_BLACK);
     tft.setTextSize(3);
-    centerText(content, tft.width()/2, tft.height()/2);
+    centerText(content, screenWidth/2, screenHeight/2);
 }
 
 void drawFooter() {
   // OVERWRITE EXISTING
-  tft.fillRect(0, tft.height()-25, tft.width(), 25, 0x4A69);  // dark grey
+  tft.fillRect(0, screenHeight-25, screenWidth, 25, 0x4A69);  // dark grey
   // make footer with btns etc.
-  tft.setCursor(10, tft.height()-20);
+  tft.setCursor(10, screenHeight-20);
   tft.setTextSize(2);
   tft.setTextColor(0x94B2);  // grey
   tft.println("by FL");
@@ -972,10 +977,10 @@ void drawFooter() {
 
 void drawFooterButtons() {
   if(!editSettings) {
-    tft.setCursor(170, tft.height()-20);
+    tft.setCursor(170, screenHeight-20);
     tft.println("Press knob for adjustment");
   } else {
-    drawButton("Reset", tft.width()-180, tft.height()-24, 80, 23, menuIds[menuSelector] == "reset", HX8357_RED);
-    drawButton("Save", tft.width()-90, tft.height()-24, 80, 23, menuIds[menuSelector] == "exit");
+    drawButton("Reset", screenWidth-180, screenHeight-24, 80, 23, menuIds[menuSelector] == "reset", HX8357_RED);
+    drawButton("Save", screenWidth-90, screenHeight-24, 80, 23, menuIds[menuSelector] == "exit");
   }
 }
