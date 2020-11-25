@@ -62,7 +62,7 @@ triggerSetup triggers[numOfTriggers] = {
 	{6, 1600000, 2600000, true},
 	{7, 2000000, 2200000, true},
 	{8, 1000000, 2000000, true},
-	{9, 7000000, 8000000, true},
+	{9, 2147483640, 2147483642, true},
 
   // test with every second HIGH 0.1 LOW
   /* {4, 0, 100000, false},
@@ -289,12 +289,13 @@ void menu() {
         Serial.println("μs ("+String(initDelay / 1000000.0)+"..s)"); */
         lastTimeMoved = millis();
       }
-      // to preserve momentum of rotary encoder, only safe this once in a while
+      // to preserve inertia of rotary encoder, only safe this once in a while
       if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
         drawPopUpContent(floatMicrosToString(initDelay, "s"));
         lastTimeMoved = 0;
       }
     }
+    initDelay = initDelay < 2147483647 ? initDelay : 2147483647;  // max size of type long (35.79min)
     Serial.print("Saved initDelay:\t");
     Serial.print(initDelay);
     Serial.println("μs ("+String(initDelay / 1000000.0)+"..s)");
@@ -325,11 +326,16 @@ void menu() {
           Serial.println("μs ("+String(triggers[relayIndex].startPoint / 1000000.0)+"..s)"); */
           lastTimeMoved = millis();
         }
+        // to preserve inertia of rotary encoder, only safe this once in a while
         if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
           drawPopUpContent(floatMicrosToString(triggers[relayIndex].startPoint, "s"));
           lastTimeMoved = 0;
         }
       }
+      triggers[relayIndex].startPoint =
+        triggers[relayIndex].startPoint < 2147483647 - initialGap
+          ? triggers[relayIndex].startPoint
+          : 2147483647 - initialGap;  // max size of type long (35.79min) - minus initialGap than endpoint
       // re-set endpoint
       triggers[relayIndex].endPoint = triggers[relayIndex].startPoint + initialGap;
       Serial.print("Saved startPoint");
@@ -351,11 +357,16 @@ void menu() {
           Serial.println("μs ("+String(triggers[relayIndex].endPoint / 1000000.0)+"..s)"); */
           lastTimeMoved = millis();
         }
+        // to preserve inertia of rotary encoder, only safe this once in a while
         if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
           drawPopUpContent(floatMicrosToString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
           lastTimeMoved = 0;
         }
       }
+      triggers[relayIndex].endPoint =
+        triggers[relayIndex].endPoint < 2147483647
+          ? triggers[relayIndex].endPoint
+          : 2147483647;  // max size of type long (35.79min)
       Serial.print("Saved endPoint ");
       Serial.print(triggers[relayIndex].endPoint);
       Serial.println("μs ("+String(triggers[relayIndex].endPoint / 1000000.0)+"..s)");
@@ -809,7 +820,7 @@ void splashScreen() {
   tft.setCursor(200, screenHeight/2+25);
   tft.setTextSize(2);
   tft.setTextColor(0xC638);  // light grey
-  centerText("by FL", screenWidth/2, screenHeight/2+25);
+  centerText("by filmkulissen.ch", screenWidth/2, screenHeight/2+25);
 }
 
 // Draw complete screen
@@ -971,7 +982,6 @@ void drawFooter() {
   tft.setTextSize(2);
   tft.setTextColor(0x94B2);  // grey
   tft.println("by FL");
-
   drawFooterButtons();
 }
 
