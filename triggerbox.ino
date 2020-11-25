@@ -178,27 +178,12 @@ void menu() {
   // Edit initDelay
   if(digitalRead(rotaryHomePin) && selectedMenu == "initDelay") {
     drawPopUp("Set initial delay");
-    drawPopUpContent(timestampToFloatString(initDelay, "s"));
+    drawPopUpContent(timestampToFloatString(initDelay, "s", false), "");
     delay(250);  // wait for button to be depressed
     Serial.print("Edit initDelay:\t");
     Serial.println(initDelay);
-    long lastTimeMoved = millis();
-    while(!digitalRead(rotaryHomePin)) {
-      long reading = readRotaryEncoder(true);
-      if(reading != 0) {
-        initDelay += reading;
-        initDelay = initDelay >= 0 ? initDelay : 0;
-        /* Serial.print(initDelay);
-        Serial.println("μs ("+String(initDelay / 1000000.0)+"..s)"); */
-        lastTimeMoved = millis();
-      }
-      // to preserve inertia of rotary encoder, only safe this once in a while
-      if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
-        drawPopUpContent(timestampToFloatString(initDelay, "s"));
-        lastTimeMoved = 0;
-      }
-    }
-    initDelay = initDelay < 2147483647 ? initDelay : 2147483647;  // max size of type long (35.79min)
+    initDelay = setValueWithRotaryEncoder(initDelay, 0, 0, 1000, true);  // Edit [0.000]0000
+    initDelay = setValueWithRotaryEncoder(initDelay, 0, 0, 1, true);  // Edit 0.000[0000]
     Serial.print("Saved initDelay:\t");
     Serial.print(initDelay);
     Serial.println("μs ("+String(initDelay / 1000000.0)+"..s)");
@@ -214,30 +199,12 @@ void menu() {
 
     if(relayTimepointToEdit == "startPoint") {
       drawPopUp("Set startpoint #" + String(relayIndex+1));
-      drawPopUpContent(timestampToFloatString(triggers[relayIndex].startPoint, "s"));
+      drawPopUpContent(timestampToFloatString(triggers[relayIndex].startPoint, "s", false), "");
       Serial.println("Edit start point:");
       long initialGap = triggers[relayIndex].endPoint - triggers[relayIndex].startPoint;
-      while(!digitalRead(rotaryHomePin)) {
-        long reading = readRotaryEncoder(true);
-        if(reading != 0) {
-          triggers[relayIndex].startPoint += reading;
-          triggers[relayIndex].startPoint = triggers[relayIndex].startPoint >= 0
-            ? triggers[relayIndex].startPoint
-            : 0;
-          /* Serial.print(triggers[relayIndex].startPoint);
-          Serial.println("μs ("+String(triggers[relayIndex].startPoint / 1000000.0)+"..s)"); */
-          lastTimeMoved = millis();
-        }
-        // to preserve inertia of rotary encoder, only safe this once in a while
-        if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
-          drawPopUpContent(timestampToFloatString(triggers[relayIndex].startPoint, "s"));
-          lastTimeMoved = 0;
-        }
-      }
-      triggers[relayIndex].startPoint =
-        triggers[relayIndex].startPoint < 2147483647 - initialGap
-          ? triggers[relayIndex].startPoint
-          : 2147483647 - initialGap;  // max size of type long (35.79min) - minus initialGap than endpoint
+      triggers[relayIndex].startPoint  = setValueWithRotaryEncoder(triggers[relayIndex].startPoint, 0, 2147483646-initialGap, 1000, true);  // Edit [0.000]0000
+      triggers[relayIndex].startPoint  = setValueWithRotaryEncoder(triggers[relayIndex].startPoint, 0, 2147483646-initialGap, 1, true);  // Edit 0.000[0000]
+      
       // re-set endpoint
       triggers[relayIndex].endPoint = triggers[relayIndex].startPoint + initialGap;
       Serial.print("Saved startPoint");
@@ -246,29 +213,12 @@ void menu() {
 
     } else {
       drawPopUp("Set duration #" + String(relayIndex+1));
-      drawPopUpContent(timestampToFloatString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
+      drawPopUpContent(timestampToFloatString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s", false), "");
       Serial.println("Edit end point:");
-      while(!digitalRead(rotaryHomePin)) {
-        long reading = readRotaryEncoder(true);
-        if(reading != 0) {
-          triggers[relayIndex].endPoint += reading;
-          triggers[relayIndex].endPoint = triggers[relayIndex].endPoint > triggers[relayIndex].startPoint
-            ? triggers[relayIndex].endPoint
-            : triggers[relayIndex].startPoint+1;  // Always at least 1 micros later to turn off
-          /* Serial.print(triggers[relayIndex].endPoint);
-          Serial.println("μs ("+String(triggers[relayIndex].endPoint / 1000000.0)+"..s)"); */
-          lastTimeMoved = millis();
-        }
-        // to preserve inertia of rotary encoder, only safe this once in a while
-        if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
-          drawPopUpContent(timestampToFloatString(triggers[relayIndex].endPoint - triggers[relayIndex].startPoint, "s"));
-          lastTimeMoved = 0;
-        }
-      }
-      triggers[relayIndex].endPoint =
-        triggers[relayIndex].endPoint < 2147483647
-          ? triggers[relayIndex].endPoint
-          : 2147483647;  // max size of type long (35.79min)
+      long delay = triggers[relayIndex].endPoint - triggers[relayIndex].startPoint;
+      delay  = setValueWithRotaryEncoder(delay, 1, 0, 1000, true);  // Edit [0.000]0000
+      delay  = setValueWithRotaryEncoder(delay, 1, 0, 1, true);  // Edit 0.000[0000]
+      triggers[relayIndex].endPoint = triggers[relayIndex].startPoint + delay;
       Serial.print("Saved endPoint ");
       Serial.print(triggers[relayIndex].endPoint);
       Serial.println("μs ("+String(triggers[relayIndex].endPoint / 1000000.0)+"..s)");
@@ -307,12 +257,38 @@ void menu() {
   }
 }
 
+long setValueWithRotaryEncoder(long value, long min, long max, int multiplicator, boolean inertia) {
+  long lastTimeMoved = millis();
+  max = max == 0 ? 2147483646 : max;  // if 0 is max, use highest possible long
+  while(!digitalRead(rotaryHomePin)) {
+    long reading = readRotaryEncoder(inertia)*multiplicator;
+    if(reading != 0) {
+      value += reading;
+      //value = value >= 0 ? value : 0;
+      value = value >= min ? value : min;
+      value = value <= max ? value : max;  // max size of type long (35.79min)
+      /* Serial.print(value);
+      Serial.println("μs ("+String(value / 1000000.0)+"..s)"); */
+      lastTimeMoved = millis();
+    }
+    // to preserve inertia of rotary encoder, only safe this once in a while
+    if(millis() - lastTimeMoved > 200 && lastTimeMoved != 0) {
+      String valueAsText = timestampToFloatString(value, "s", false);
+      String indicator = getEditMarker(valueAsText.length(), multiplicator == 1);
+      drawPopUpContent(valueAsText, indicator);
+      lastTimeMoved = 0;
+    }
+  }
+  delay(250);  // wait for btn release
+  return value;
+}
+
 long readRotaryEncoder(boolean inertia) {
   uint8_t reading = rotaryEncoder.read();
   if (reading) {
     int speed = rotaryEncoder.speed();
     int direction = reading == DIR_CW ? 1 : -1;
-    long step = inertia ? (pow(10, int(speed/4))+.99) * direction : direction;  // speedramps! +.99 to round up int
+    long step = inertia ? (pow(10, int(speed/5))+.99) * direction : direction;  // speedramps! +.99 to round up int
     return step;
   } else {
     return 0;
@@ -377,7 +353,7 @@ void calculateActions() {
   for(int i = 0; i < numOfActions; i++) {
     if(actionTimestamps[i] == lastValue) {
       lastValue = actionTimestamps[i];
-      actionTimestamps[i] = 2147483647;  // move to back of array
+      actionTimestamps[i] = 2147483646;  // move to back of array
       newNumOfActions -= 1;
     } else {
       lastValue = actionTimestamps[i];  // Yes must be here.
@@ -639,13 +615,13 @@ void delaySometime(long delayTime) {
   }
 };
 
-String timestampToFloatString(long timestamp, String append) {
-  // Max lenght of long timestamp: 2147483647 / 10 digits
+String timestampToFloatString(long timestamp, String append, boolean shorten) {
+  // Max lenght of long timestamp: 2147483646 / 10 digits
   int padding = timestamp > 99999999 ? 10 : 9;  // If large number, increase leading spaces
   char result[padding];  // 123.1234567
   dtostrf(timestamp/1000000.0, padding, 6, result); 
   // If large number, do not append "s" to save space
-  return timestamp > 99999999
+  return timestamp > 99999999 && shorten
     ? result
     : result + append;
 }
@@ -769,7 +745,7 @@ void drawSettings() {
 }
 
 void drawInitDelayButton() {
-  drawButton(timestampToFloatString(initDelay, "s"), 180, 55, 150, 23, menuIds[menuSelector] == "initDelay");
+  drawButton(timestampToFloatString(initDelay, "s", false), 180, 55, 175, 23, menuIds[menuSelector] == "initDelay");
 }
 
 // Draw table header of triggers
@@ -807,12 +783,12 @@ void drawTrigger(int i) {
 
   // STARTPOINT
   highlightTextIfSelected(menuSelector == 1+i*3, relayIsActive);  // +1 because relay edit starts at index 1 of menuIds
-  tft.print(timestampToFloatString(triggers[i].startPoint, "s"));
+  tft.print(timestampToFloatString(triggers[i].startPoint, "s", true));
   tft.setTextColor(HX8357_WHITE, HX8357_BLACK); tft.print(" ");
 
   // DURATION
   highlightTextIfSelected(menuSelector == 2+i*3, relayIsActive);  // +1 because relay edit starts at index 1 of menuIds
-  tft.print(timestampToFloatString(triggers[i].endPoint - triggers[i].startPoint, "s"));
+  tft.print(timestampToFloatString(triggers[i].endPoint - triggers[i].startPoint, "s", true));
   tft.setTextColor(HX8357_WHITE, HX8357_BLACK); tft.print(" ");
   
   // ACTIVE
@@ -841,11 +817,24 @@ void drawPopUp(String title) {
 }
 
 // Draw contents of pop up
-void drawPopUpContent(String content) {
-    tft.fillRect(30, screenHeight/2-5, screenWidth-60, 30, HX8357_WHITE);
+void drawPopUpContent(String content, String secondRow) {
+    tft.fillRect(30, screenHeight/2-5, screenWidth-60, 55, HX8357_WHITE);
     tft.setTextColor(HX8357_BLACK);
     tft.setTextSize(3);
     centerText(content, screenWidth/2, screenHeight/2);
+    tft.setTextColor(HX8357_BLUE);
+    if(secondRow) centerText(secondRow, screenWidth/2, screenHeight/2+27);
+}
+
+String getEditMarker(int lengthOfText, boolean lastThreeDigits) {
+  String baseString = lastThreeDigits ? "      ^^^ " : "^^ ^^^    ";
+  if(lengthOfText <= 10) {
+    return baseString;
+  } else if(lengthOfText == 11) {
+    return "  " + baseString + " ";
+  } else if(lengthOfText == 12) {
+    return "  " + baseString;
+  }
 }
 
 void drawFooter() {
