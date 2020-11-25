@@ -169,7 +169,7 @@ void loop() {
     drawFooter();  // redraw because buttons show up
     drawInitDelayButton();  // redraw because button is now selected
     Serial.println("---------");
-    Serial.println("~~:::=[ TRIGGERBOX MENU ]=:::~~");
+    Serial.println("MENU");
     Serial.println("---------");
     Serial.println("Set initial delay..");
     delay(250); // wait for button to be released
@@ -238,9 +238,13 @@ void menu() {
       if(relayIndex - 1 >= 0) drawTrigger(relayIndex-1);  // clear previous highlight
       drawTrigger(relayIndex);  // Draw to display
       if(relayIndex + 1 < numOfTriggers) drawTrigger(relayIndex+1);  // clear next highlight
-      Serial.println(getRelayMenuItem(relayIndex, selectedMenuDisplay));  
+      #ifdef debug
+        Serial.println(getRelayMenuItem(relayIndex, selectedMenuDisplay));  
+      #endif
     } else {
-      Serial.println(selectedMenuDisplay);
+      #ifdef debug
+        Serial.println(selectedMenuDisplay);
+      #endif
     }
 
     if(selectedMenu == "initDelay") {  // redraw selection of trigger
