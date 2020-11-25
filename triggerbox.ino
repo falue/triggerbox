@@ -19,7 +19,7 @@ MD_REncoder rotaryEncoder = MD_REncoder(0, 1);
 volatile boolean triggerIsActive = false;
 boolean hasShownTriggeronTft = false;
 volatile boolean safetyIsOn = false;
-long initDelay = 2147483647;  // MICROSECONDS eg. 1000000 (= 1s)
+long initDelay = 0;  // MICROSECONDS eg. 1000000 (= 1s)
 volatile long lastTimeTriggered = 0;
 long rotaryOldPosition = 0;
 long rotaryCurrentDirection = 0;
