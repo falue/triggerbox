@@ -11,9 +11,9 @@ volatile const int safetySwitchPin = 3;
 const int triggerLedPin = 13;
 const int rotaryHomePin = A5;
 MD_REncoder rotaryEncoder = MD_REncoder(0, 1);
-#define TFT_CS 10  // tft
-#define TFT_DC 11  // tft
-#define TFT_RST 12  // tft
+#define TFT_CS 10
+#define TFT_DC 11
+#define TFT_RST 12
 
 // VARS ---------------------------------------------------------------------------------------
 volatile boolean triggerIsActive = false;
@@ -57,20 +57,12 @@ typedef struct triggerSetup {
 const int numOfTriggers = 6;  // max physical connections
 // TIMESTAMPS IN MICROSECONDS.
 triggerSetup triggers[numOfTriggers] = {
-  {4, 0, 500000, true},
-	{5, 1000000, 1500000, true},
-	{6, 2000000, 2500000, true},
-	{7, 3000000, 3500000, true},
+  {4, 0, 100000, true},
+	{5, 1000000, 1200000, true},
+	{6, 2000000, 2300000, true},
+	{7, 3000000, 3400000, true},
 	{8, 4000000, 4500000, true},
-	{9, 5000000, 5500000, true},
-
-  // test with every second HIGH 0.1 LOW
-  /* {4, 0, 100000, false},
-	{5, 1000000, 1100000, false},
-	{6, 2000000, 2100000, false},
-	{7, 3000000, 3100000, false},
-	{8, 4000000, 4100000, false},
-	{9, 5000000, 5100000, false}, */
+	{9, 5000000, 5600000, true},
 };
 
 typedef struct action {
@@ -164,7 +156,7 @@ void setup() {
 
   safetyIsOn = digitalRead(safetySwitchPin);
 
-  // Create base layout
+  // Draw base layout
   drawLayout();
 };
 
@@ -180,7 +172,6 @@ void loop() {
     Serial.println("~~:::=[ TRIGGERBOX MENU ]=:::~~");
     Serial.println("---------");
     Serial.println("Set initial delay..");
-    // menuSelector = 0; do not reset menu position. but i could :) or should? pointer always on "save" or "exit"
     delay(250); // wait for button to be released
   }
 
@@ -198,7 +189,7 @@ void loop() {
     }
   }
   
-  // Ff trigger pushbtn is pressed
+  // If trigger push btn is pressed
   if(triggerIsActive) {  //  
     Serial.println("---------");
     triggerAction();
@@ -209,7 +200,6 @@ void loop() {
 
 // ACTIONS ------------------------------------------------------------------------------------
 void menu() {
-
   // Names of menu items to display
   String menuDisplay[numOfMenuIds] = {
     F("Set initial delay.."),
@@ -228,23 +218,12 @@ void menu() {
 
   rotaryDirection = readRotaryEncoder(false);
   if(rotaryDirection != 0) {
-    //Serial.println(rotaryDirection);
     menuSelector += rotaryDirection;
     if(menuSelector > numOfMenuIds-1) menuSelector = 0;
     if(menuSelector < 0) menuSelector = numOfMenuIds-1;
     // menu level
     selectedMenu = menuIds[menuSelector];
     selectedMenuDisplay = menuDisplay[menuSelector];
-    /* Serial.print("\t-->\tnumOfMenuIds: ");
-    Serial.print(numOfMenuIds); */
-    /* Serial.print("menuSelector: ");
-    Serial.print(menuSelector);
-    Serial.print("\t-->\t"); */
-    /* Serial.print("Id: ");
-    Serial.print(selectedMenu);
-    Serial.print("\t->\tDisplay: ");
-    Serial.print(selectedMenuDisplay);
-    Serial.print("\t->\tCalc.Display: "); */
 
     drawFooterButtons();  // redraw buttons to select or deselect
     drawInitDelayButton();  // redraw buttons to select or deselect
@@ -307,7 +286,6 @@ void menu() {
   if(digitalRead(rotaryHomePin) && selectedMenu.startsWith("setRelay")) {
     String relayTimepointToEdit = selectedMenu.substring(12);
     delay(250);  // wait for button to be depressed
-    //int relayIndex = selectedMenu.substring(9, 11).toInt();  // i know, i know
     long lastTimeMoved = millis();
 
     if(relayTimepointToEdit == "startPoint") {
@@ -376,7 +354,6 @@ void menu() {
   }
 
   if(digitalRead(rotaryHomePin) && selectedMenu.startsWith("toggleRelay")) {
-    //  relayIndex = selectedMenu.substring(12, 14).toInt();  // gets overwritten
     Serial.print("Edit active nr. ");
     Serial.print("di/enable ");
     Serial.println(relayIndex);
@@ -388,13 +365,12 @@ void menu() {
   // Reset to default
   if(digitalRead(rotaryHomePin) && selectedMenu == "reset") {
     initDelay = 0;
-    triggers[0] = {4, 0, 500000, true};
-	  triggers[1] = {5, 1000000, 1500000, true};
-	  triggers[2] = {6, 2000000, 2500000, true};
-	  triggers[3] = {7, 3000000, 3500000, true};
+    triggers[0] = {4, 0, 100000, true};
+	  triggers[1] = {5, 1000000, 1200000, true};
+	  triggers[2] = {6, 2000000, 2300000, true};
+	  triggers[3] = {7, 3000000, 3400000, true};
 	  triggers[4] = {8, 4000000, 4500000, true};
-	  triggers[5] = {9, 5000000, 5500000, true};
-
+	  triggers[5] = {9, 5000000, 5600000, true};
     delay(250);  // wait for btn release
     editSettings = false;
   }
@@ -412,13 +388,7 @@ long readRotaryEncoder(boolean inertia) {
   if (reading) {
     int speed = rotaryEncoder.speed();
     int direction = reading == DIR_CW ? 1 : -1;
-    // /10
     long step = inertia ? (pow(10, int(speed/5))+.99) * direction : direction;  // speedramps! +.99 to round up int
-    /* Serial.print(direction);
-    Serial.print("\t");
-    Serial.print(speed);  // linear
-    Serial.print("\t");
-    Serial.println(step); */
     return step;
   } else {
     return 0;
@@ -426,12 +396,11 @@ long readRotaryEncoder(boolean inertia) {
 }
 
 String getRelayMenuItem(int relayIndex, String nameOfMenu) {
-  //int relayIndex = nameOfMenu.substring(9, 11).toInt();  // i know, i know
   String relayTimepointToEdit = nameOfMenu.substring(12);
   if(relayTimepointToEdit == "startPoint"){
     return "Relay " + String(relayIndex+1) +
            " - Start:  T+" +String(triggers[relayIndex].startPoint / 1000000.0) + "s";
-  } else {                              //  Start: T+0
+  } else {
     return "Relay " + String(relayIndex+1) + " - Duration: " +
            String((triggers[relayIndex].endPoint-triggers[relayIndex].startPoint) / 1000000.0) + "s" +
            " (T+"+String(triggers[relayIndex].endPoint / 1000000.0)+"s)";
@@ -446,7 +415,6 @@ void calculateActions() {
   // set "actions" according to "triggers"
   Serial.println("Calculate actions..");
   // Serial.println("----------------\nbefore collections: ");
-
   //printTriggers();
 
   long actionTimestamps[maxActions];
@@ -461,11 +429,6 @@ void calculateActions() {
       numOfActions++;
     }
   }
-  /* Serial.println("----------------\nnumOfTriggers: ");
-  Serial.print(numOfTriggers);
-  Serial.println("\n----------------\nnumOfActions: ");
-  Serial.print(numOfActions);
-  Serial.println("\n----------------\nUnsorted:"); */
   
   // proof
   // Print collected timestamps
@@ -509,7 +472,6 @@ void calculateActions() {
     Serial.println(actionTimestamps[i]);
   }
   Serial.println("-------"); */
-
 
   // iterate over "actionTimestamps"
   long lastTimestamp = 0;
@@ -567,20 +529,16 @@ void calculateActions() {
 
         actions[i].pins[countOfTriggerActions] = {
           triggers[x].pin,
-          triggers[x].startPoint,  // this is not used in triggerActions()
-          triggers[x].endPoint,  // this is not used in triggerActions()
+          triggers[x].startPoint,  // this is maybe not used in triggerActions()
+          triggers[x].endPoint,  // this is maybe not used in triggerActions()
           triggers[x].startPoint == actionTimestamps[i],  // Set "active" to true or false
         };
-       
         countOfTriggerActions += 1;
       }
     }
     actions[i].triggerAction = countOfTriggerActions;
     lastTimestamp = actionTimestamps[i];
   }
-
-  /* Serial.println();
-  Serial.println("Calculation ended."); */
 };
 
 
@@ -636,10 +594,8 @@ void triggerAction() {
   #ifdef debug
     Serial.println("Actions triggered");
   #endif
-
   digitalWrite(triggerLedPin, HIGH);
-
-  // Wait at beginning
+  // Wait at beginning and, if there is time, draw red dot on tft
   if(initDelay > 0) {
     if(initDelay > 4000 && !hasShownTriggeronTft) {  // it takes ~3031ys to draw the red circle with white border
       delaySometime(initDelay - drawTriggerAction(true));
@@ -656,13 +612,12 @@ void triggerAction() {
       Serial.println("..");
     #endif
 
+    // If there is time, draw red dot on tft
     if(actions[i].timestamp > 4000 && !hasShownTriggeronTft) {  // it takes ~3031ys to draw the red circle with white border
       delaySometime(actions[i].timestamp - drawTriggerAction(true));
     } else {
       delaySometime(actions[i].timestamp);
     }
-
-
 
     // If trigger was not aborted in the meantime...
     if(triggerIsActive) {
@@ -712,8 +667,8 @@ void reset() {
   for(int i = 0; i < numOfTriggers; i++) {
     digitalWrite(triggers[i].pin, LOW);
   }
-    digitalWrite(triggerLedPin, LOW);
-    drawTriggerAction(false);
+  digitalWrite(triggerLedPin, LOW);
+  drawTriggerAction(false);
 };
 
 // Save triggers and settings (initDelay) to spi-flash
@@ -752,28 +707,26 @@ void getDataFromMemory() {
 // than largest technically accurate value for delayMicroseconds()
 void delaySometime(long delayTime) {
   if(delayTime > 16383) {
-    // Serial.print("delay milliseconds: ");
-    // Serial.println(delayTime/1000);
     delay(delayTime/1000);
     delayMicroseconds(delayTime - (delayTime/1000)*1000);  // delay rest of millis
     // eg. 123456-(123456/1000)*1000 => delayMicroseconds(456)
   } else {
-    // Serial.print("delay microseconds: ");
-    // Serial.println(delayTime);
     delayMicroseconds(delayTime);
   }
 };
 
 String timestampToFloatString(long timestamp, String append) {
-  // max lenght of long timestamp: 2147483647 / 10 digits
-  int padding = timestamp > 99999999 ? 10 : 9;
+  // Max lenght of long timestamp: 2147483647 / 10 digits
+  int padding = timestamp > 99999999 ? 10 : 9;  // If large number, increase leading spaces
   char result[padding];  // 123.1234567
   dtostrf(timestamp/1000000.0, padding, 6, result); 
+  // If large number, do not append "s" to save space
   return timestamp > 99999999
     ? result
     : result + append;
 }
 
+// Should be in standard arduino library?
 char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
   asm(".global _printf_float");
   char fmt[20];
@@ -782,19 +735,9 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
   return sout;
 }
 
-/* String rightPad(String text, int length, String padd) {
-  int currentLength = text.length();
-  int isPAddingUseful = currentlength < length;
-  if(isPAddingUseful) {
-    return String(length - length, padd) + text;
-  } else {
-    return text;
-  }
-} */
 
-
-// TFT
-// GUI Elements & helpers
+// TFT ----------------------------------------------------------------------------
+// Center text in between a rectangle x & y
 void centerText(const String &text, int x, int y) {
   int16_t x1, y1;
   uint16_t w, h;
@@ -803,6 +746,8 @@ void centerText(const String &text, int x, int y) {
   tft.print(text);
 }
 
+// Draw a button in two states: Selected or deselected.
+// Defaults to deselected if editSettings is true.
 void drawButton(String text, int x, int y, int w, int h, boolean selected, uint16_t selectedColor=HX8357_BLUE) {
   if(selected && editSettings) {
     tft.fillRoundRect(x, y, w, h, 5, selectedColor);
@@ -817,7 +762,7 @@ void drawButton(String text, int x, int y, int w, int h, boolean selected, uint1
   tft.println(text);
 }
 
-// SPLASHSCREEN
+// Display splashscreen
 void splashScreen() {
   tft.fillScreen(HX8357_WHITE);
   tft.setCursor(100, 1250);
@@ -830,7 +775,7 @@ void splashScreen() {
   centerText("by filmkulissen.ch", screenWidth/2, screenHeight/2+25);
 }
 
-// Draw complete screen
+// Draw complete GUI on screen
 void drawLayout() {
   // Clear the whole screen
   tft.fillScreen(HX8357_BLACK);
@@ -843,6 +788,7 @@ void drawLayout() {
   drawFooter();
 
   if(safetyIsOn) {
+    // Draw warning pop up if safety switch is engaged
     drawPopUp("Safety switch is on");
     tft.fillCircle(screenWidth/2, screenHeight/2+15, 36, HX8357_RED);
     tft.fillCircle(screenWidth/2, screenHeight/2+15, 30, HX8357_WHITE);
@@ -855,14 +801,12 @@ void drawLayout() {
 void drawNavbar() {
   // OVERWRITE EXISTING
   tft.fillRect(0, 0, screenWidth, 50, 0x4A69);  // dark grey
-
   tft.setCursor(10, 7);
   tft.setTextSize(5);
   tft.setTextColor(HX8357_WHITE);
   tft.print("TRIGGER");
   tft.setTextColor(HX8357_BLUE);
   tft.println("BOX");
-
   if(editSettings) drawLock();
 }
 
@@ -904,6 +848,7 @@ void drawInitDelayButton() {
   drawButton(timestampToFloatString(initDelay, "s"), 180, 55, 150, 23, menuIds[menuSelector] == "initDelay");
 }
 
+// Draw table header of triggers
 void drawTriggerHeader() {
   tft.setCursor(0, marginTopTriggerlist);
   tft.setTextSize(2);
@@ -911,8 +856,8 @@ void drawTriggerHeader() {
   tft.println("#   Start T+..       Duration     Active");
 }
 
+// Draw all triggers in rows
 void drawAllTriggers() {
-  // OVERWRITE EXISTING
   tft.fillRect(0, marginTopTriggerlist+22, screenWidth, 143, HX8357_BLACK);
   tft.setCursor(0, marginTopTriggerlist+22);
   tft.setTextSize(3);
@@ -922,8 +867,8 @@ void drawAllTriggers() {
   }
 }
 
+// Draw one specific trigger row
 void drawTrigger(int i) {
-  // fill row
   tft.fillRect(0, marginTopTriggerlist+22+i*30, screenWidth, 24, HX8357_BLACK);
   tft.setCursor(0, marginTopTriggerlist+22+i*30);
   tft.setTextSize(3);
@@ -936,13 +881,6 @@ void drawTrigger(int i) {
   tft.print(i+1);
   tft.setTextColor(HX8357_WHITE, HX8357_BLACK); tft.print(" ");
 
-  /* tft.print(menuSelector);
-  tft.print(": ");
-  tft.print(highlightSelected);
-  tft.print(": ");
-  tft.print(highlightSelected == menuSelector);
-  tft.print(": "); */
-
   // STARTPOINT
   highlightTextIfSelected(menuSelector == 1+i*3, relayIsActive);  // +1 because relay edit starts at index 1 of menuIds
   tft.print(timestampToFloatString(triggers[i].startPoint, "s"));
@@ -951,7 +889,6 @@ void drawTrigger(int i) {
   // DURATION
   highlightTextIfSelected(menuSelector == 2+i*3, relayIsActive);  // +1 because relay edit starts at index 1 of menuIds
   tft.print(timestampToFloatString(triggers[i].endPoint - triggers[i].startPoint, "s"));
-  //tft.print("μs");
   tft.setTextColor(HX8357_WHITE, HX8357_BLACK); tft.print(" ");
   
   // ACTIVE
@@ -959,6 +896,7 @@ void drawTrigger(int i) {
   tft.print(triggers[i].active ? "Y" : "N");
 }
 
+// Set text color based on
 void highlightTextIfSelected(boolean selected, boolean relayIsActive) {
   if(selected && editSettings) {
     tft.setTextColor(HX8357_BLUE, HX8357_WHITE);
@@ -969,6 +907,7 @@ void highlightTextIfSelected(boolean selected, boolean relayIsActive) {
   }
 }
 
+// Draw white rectangle with a title as pop up message
 void drawPopUp(String title) {
   tft.fillRoundRect(25, 75, screenWidth-50, screenHeight-150, 5, HX8357_WHITE);
   tft.drawRoundRect(24, 73, screenWidth-48, screenHeight-147, 5, HX8357_BLACK);
@@ -977,6 +916,7 @@ void drawPopUp(String title) {
   centerText(title, screenWidth/2, screenHeight/2-50);
 }
 
+// Draw contents of pop up
 void drawPopUpContent(String content) {
     tft.fillRect(30, screenHeight/2-5, screenWidth-60, 30, HX8357_WHITE);
     tft.setTextColor(HX8357_BLACK);
@@ -985,7 +925,6 @@ void drawPopUpContent(String content) {
 }
 
 void drawFooter() {
-  // OVERWRITE EXISTING
   tft.fillRect(0, screenHeight-25, screenWidth, 25, 0x4A69);  // dark grey
   // make footer with btns etc.
   tft.setCursor(10, screenHeight-20);
