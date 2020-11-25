@@ -19,7 +19,7 @@ MD_REncoder rotaryEncoder = MD_REncoder(0, 1);
 volatile boolean triggerIsActive = false;
 boolean hasShownTriggeronTft = false;
 volatile boolean safetyIsOn = false;
-long initDelay = 1234567;  // MICROSECONDS eg. 1000000 (= 1s)
+long initDelay = 0;  // MICROSECONDS eg. 1000000 (= 1s)
 volatile long lastTimeTriggered = 0;
 long rotaryOldPosition = 0;
 long rotaryCurrentDirection = 0;
@@ -57,12 +57,12 @@ typedef struct triggerSetup {
 const int numOfTriggers = 6;  // max physical connections
 // TIMESTAMPS IN MICROSECONDS.
 triggerSetup triggers[numOfTriggers] = {
-  {4, 0, 1000000, true},
-	{5, 1000000, 2000000, true},
-	{6, 1600000, 2600000, true},
-	{7, 2000000, 2200000, true},
-	{8, 1000000, 2000000, true},
-	{9, 7000000, 8000000, true},
+  {4, 0, 500000, true},
+	{5, 1000000, 1500000, true},
+	{6, 2000000, 2500000, true},
+	{7, 3000000, 3500000, true},
+	{8, 4000000, 4500000, true},
+	{9, 5000000, 5500000, true},
 
   // test with every second HIGH 0.1 LOW
   /* {4, 0, 100000, false},
@@ -388,12 +388,12 @@ void menu() {
   // Reset to default
   if(digitalRead(rotaryHomePin) && selectedMenu == "reset") {
     initDelay = 0;
-    triggers[0] = {4, 0, 1000000, true};
-    triggers[1] = {5, 1000000, 2000000, true};
-    triggers[2] = {6, 1600000, 2600000, true};
-    triggers[3] = {7, 2000000, 2200000, true};
-    triggers[4] = {8, 1000000, 2000000, true};
-    triggers[5] = {9, 7000000, 8000000, true};
+    triggers[0] = {4, 0, 500000, true};
+	  triggers[1] = {5, 1000000, 1500000, true};
+	  triggers[2] = {6, 2000000, 2500000, true};
+	  triggers[3] = {7, 3000000, 3500000, true};
+	  triggers[4] = {8, 4000000, 4500000, true};
+	  triggers[5] = {9, 5000000, 5500000, true};
 
     delay(250);  // wait for btn release
     editSettings = false;
