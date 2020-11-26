@@ -853,7 +853,7 @@ void drawFooterButtons() {
     tft.setCursor(170, screenHeight-20);
     tft.println("Press knob for adjustment");
   } else {
-    drawButton("Reset", screenWidth-180, screenHeight-24, 80, 23, menuIds[menuSelector] == "reset", HX8357_RED);
+    drawButton("Defaults", screenWidth-220, screenHeight-24, 120, 23, menuIds[menuSelector] == "reset", HX8357_RED);
     drawButton("Save", screenWidth-90, screenHeight-24, 80, 23, menuIds[menuSelector] == "exit");
   }
 }
