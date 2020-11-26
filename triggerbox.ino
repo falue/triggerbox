@@ -239,10 +239,10 @@ void menu() {
   // Reset to default
   if(digitalRead(rotaryHomePin) && selectedMenu == "reset") {
     initDelay = 0;
-    triggers[0] = {4, 0, 100000, true};
-	  triggers[1] = {5, 1000000, 1200000, true};
-	  triggers[2] = {6, 2000000, 2300000, true};
-	  triggers[3] = {7, 3000000, 3400000, true};
+    triggers[0] = {4, 0, 1000000, true};
+	  triggers[1] = {5, 1000000, 2000000, true};
+	  triggers[2] = {6, 2000000, 3000000, true};
+	  triggers[3] = {7, 3000000, 3500000, true};
 	  triggers[4] = {8, 4000000, 4500000, true};
 	  triggers[5] = {9, 5000000, 5600000, true};
     delay(250);  // wait for btn release
