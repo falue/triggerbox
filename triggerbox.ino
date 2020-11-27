@@ -20,13 +20,16 @@ void triggerIsPushed() {
   lastTimeTriggered = millis();
 }
 
-// Safety siwtch: two pole single throw
+// Safety switch: two pole single throw
 void safetySwitchChanged() {
   safetyIsOn = digitalRead(safetySwitchPin);
-  Serial.print("safetyIsOn: ");
-  Serial.println(safetyIsOn);
-  if(!safetyIsOn) editSettings = false;  // exit menu when switch is thrown in edit mode
-  drawLayout();
+  if(safetyIsOn) {
+    reset();
+    drawSafetyPopUp();
+    editSettings = false;  // exit menu when switch is thrown in edit mode
+  } else {
+    drawLayout();
+  }
   // If, during rendering of TFT, switch was changed again, re-run function:
   if(digitalRead(safetySwitchPin) != safetyIsOn) safetySwitchChanged();
 }
@@ -45,7 +48,7 @@ void setup() {
   splashScreen();
 
   delay(1500); // wait for serial monitor to catch up...
-  Serial.println("~~:::=[ TRIGGERBOX ]=:::~~");
+  Serial.println("TRIGGERBOX INITIALIZED");
 
   // Setup buttons
   pinMode(rotaryHomePin, INPUT);
@@ -74,10 +77,11 @@ void setup() {
   printActions();
   printTriggers();
 
-  safetyIsOn = digitalRead(safetySwitchPin);
-
   // Draw base layout
   drawLayout();
+
+  safetyIsOn = digitalRead(safetySwitchPin);
+  if(safetyIsOn) drawSafetyPopUp();
 };
 
 
@@ -95,10 +99,11 @@ void loop() {
     delay(250); // wait for button to be released
   }
 
-  while(editSettings) {
+  // If rotary button is pressed and safety is not on, enter menu
+  while(editSettings && !safetyIsOn) {
     menu();
-    // If inside menu() exit was selected, calculate actions
-    if(!editSettings) {
+    // If inside menu() "save" was selected, calculate actions
+    if(!editSettings && !safetyIsOn) {
       calculateActions();
       printSettings();
       printActions();
@@ -682,15 +687,19 @@ void drawLayout() {
   drawAllTriggers();
   drawFooter();
 
-  if(safetyIsOn) {
-    // Draw warning pop up if safety switch is engaged
-    drawPopUp("Safety switch is on");
-    tft.fillCircle(screenWidth/2, screenHeight/2+15, 36, HX8357_RED);
-    tft.fillCircle(screenWidth/2, screenHeight/2+15, 30, HX8357_WHITE);
-    tft.fillTriangle( screenWidth/2-27, screenHeight/2+38, screenWidth/2+23, screenHeight/2-12, screenWidth/2+25, screenHeight/2-9, HX8357_RED);
-    tft.fillTriangle( screenWidth/2-27, screenHeight/2+38, screenWidth/2-25, screenHeight/2+41, screenWidth/2+25, screenHeight/2-9, HX8357_RED);
-    drawLock();
-  }
+  /* if(safetyIsOn) {
+    drawSafetyPopUp();
+  } */
+}
+
+// Draw warning pop up if safety switch is engaged
+void drawSafetyPopUp() {
+  drawPopUp("Safety switch is on");
+  tft.fillCircle(screenWidth/2, screenHeight/2+15, 36, HX8357_RED);
+  tft.fillCircle(screenWidth/2, screenHeight/2+15, 30, HX8357_WHITE);
+  tft.fillTriangle( screenWidth/2-27, screenHeight/2+38, screenWidth/2+23, screenHeight/2-12, screenWidth/2+25, screenHeight/2-9, HX8357_RED);
+  tft.fillTriangle( screenWidth/2-27, screenHeight/2+38, screenWidth/2-25, screenHeight/2+41, screenWidth/2+25, screenHeight/2-9, HX8357_RED);
+  drawLock();
 }
 
 void drawNavbar() {
