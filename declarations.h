@@ -3,7 +3,7 @@ const int triggerPin = 2;
 volatile const int safetySwitchPin = 3;
 const int triggerLedPin = 13;
 const int rotaryHomePin = A5;
-MD_REncoder rotaryEncoder = MD_REncoder(0, 1);
+MD_REncoder rotaryEncoder = MD_REncoder(A4, A3);
 #define TFT_CS 10
 #define TFT_DC 11
 #define TFT_RST 12
