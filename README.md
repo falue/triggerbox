@@ -23,9 +23,9 @@ Maximum delay of any trigger is 35.79mins, theoretical minimum duration 0.000001
 This project needs eg. an Adafruit Metro M0 Express to work properly. Its program size and the demands for speed exceeds the capabilities of an Arduino UNO or Leonardo.
 
 
-## Schematic
+## Wiring diagram
 
-![Schematics](./schematics/triggerbox.png)
+![wiring](./schematics/triggerbox.png)
 
 
 ### Hardware list
