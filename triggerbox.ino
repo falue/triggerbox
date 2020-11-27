@@ -497,10 +497,10 @@ void triggerAction() {
   digitalWrite(triggerLedPin, HIGH);
   // Wait at beginning and, if there is time, draw red dot on tft
   if(initDelay > 0) {
-    if(initDelay > 4000 && !hasShownTriggeronTft) {  // it takes ~3031ys to draw the red circle with white border
-      delaySometime(initDelay - drawTriggerAction(true));
+    if(initDelay > 4000 && !hasShownTriggerOnTft) {  // it takes ~3031ys to draw the red circle with white border
+      wait(initDelay - drawTriggerAction(true));
     } else {
-      delaySometime(initDelay);
+      wait(initDelay);
     }
   }
 
@@ -513,10 +513,10 @@ void triggerAction() {
     #endif
 
     // If there is time, draw red dot on tft
-    if(actions[i].timestamp > 4000 && !hasShownTriggeronTft) {  // it takes ~3031ys to draw the red circle with white border
-      delaySometime(actions[i].timestamp - drawTriggerAction(true));
+    if(actions[i].timestamp > 4000 && !hasShownTriggerOnTft) {  // it takes ~3031ys to draw the red circle with white border
+      wait(actions[i].timestamp - drawTriggerAction(true));
     } else {
-      delaySometime(actions[i].timestamp);
+      wait(actions[i].timestamp);
     }
 
     // If trigger was not aborted in the meantime...
@@ -603,17 +603,12 @@ void getDataFromMemory() {
   } */
 }
 
-// Use delay() & delayMicroseconds() if microseconds is bigger
-// than largest technically accurate value for delayMicroseconds()
-void delaySometime(long delayTime) {
-  if(delayTime > 16383) {
-    delay(delayTime/1000);
-    delayMicroseconds(delayTime - (delayTime/1000)*1000);  // delay rest of millis
-    // eg. 123456-(123456/1000)*1000 => delayMicroseconds(456)
-  } else {
-    delayMicroseconds(delayTime);
+void wait(long delayTime) {
+  long stop = micros() + delayTime;
+  while(micros() <= stop && triggerIsActive) {
+    // twiddle your thumbs
   }
-};
+}
 
 String timestampToFloatString(long timestamp, String append, boolean shorten) {
   // Max lenght of long timestamp: 2147483646 / 10 digits
@@ -729,7 +724,7 @@ int drawTriggerAction(boolean show) {
   } else {
     tft.fillRect(screenWidth-34, 14, 22, 22, 0x4A69);  // dark grey
   }
-  hasShownTriggeronTft = show;
+  hasShownTriggerOnTft = show;
   return(micros() - startTrigger);
 }
 

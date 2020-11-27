@@ -10,7 +10,7 @@ MD_REncoder rotaryEncoder = MD_REncoder(A4, A3);
 
 // VARS ---------------------------------------------------------------------------------------
 volatile boolean triggerIsActive = false;
-boolean hasShownTriggeronTft = false;
+boolean hasShownTriggerOnTft = false;
 volatile boolean safetyIsOn = false;
 long initDelay = 0;  // MICROSECONDS eg. 1000000 (= 1s)
 volatile long lastTimeTriggered = 0;
