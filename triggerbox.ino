@@ -115,11 +115,10 @@ void loop() {
   }
   
   // If trigger push btn is pressed
-  if(triggerIsActive) {  //  
-    Serial.println("---------");
-    triggerAction();
-  }
-  delay(100);  // Cut the loop() some slack
+  if(triggerIsActive) triggerAction();
+
+  // Cut the loop() some slack
+  delay(100);
 };
 
 
@@ -686,10 +685,6 @@ void drawLayout() {
   drawTriggerHeader();
   drawAllTriggers();
   drawFooter();
-
-  /* if(safetyIsOn) {
-    drawSafetyPopUp();
-  } */
 }
 
 // Draw warning pop up if safety switch is engaged

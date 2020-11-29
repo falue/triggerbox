@@ -50,12 +50,12 @@ typedef struct triggerSetup {
 const int numOfTriggers = 6;  // max physical connections
 // TIMESTAMPS IN MICROSECONDS.
 triggerSetup triggers[numOfTriggers] = {
-  {4, 0, 100000, true},
-	{5, 1000000, 1200000, true},
-	{6, 2000000, 2300000, true},
-	{7, 3000000, 3400000, true},
-	{8, 4000000, 4500000, true},
-	{9, 5000000, 5600000, true},
+  {4, 0, 1000000, true},
+	{5, 100000, 100009, true},
+	{6, 2000000, 2000009, true},
+	{7, 30000000, 30900000, true},
+	{8, 400000000, 400000009, true},
+	{9, 2147483640, 2147483645, true},
 };
 
 typedef struct action {
